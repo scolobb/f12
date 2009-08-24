@@ -51,6 +51,15 @@ fi
 WINDOW_ID=$(head -n1 $CTRL_FILE)
 WINDOW_STATE=$(tail -n1 $CTRL_FILE)
 
+if [ ! $(wmctrl -l | cut -d" " -f1 | grep $WINDOW_ID) ]
+then
+    # Our control file has gone stale -- there are no windows with the
+    # ID we memorized at the first invocation.
+    rm $CTRL_FILE
+    f12.sh &
+    exit 0
+fi
+
 # Show/hide the window.
 wmctrl -b toggle,hidden -i -r $WINDOW_ID
 
