@@ -11,8 +11,8 @@
 # USER CONFIGURABLE VARIABLES
 # ===========================
 
-# This is the expected title of the new terminal window.
-TITLE="New screen..."
+# The name of a gnome-terminal window class.
+CLASS="gnome-terminal.Gnome-terminal"
 
 # The command to execute in the terminal.
 COMMAND="screen -D -RR"
@@ -34,7 +34,7 @@ then
     sleep $WAIT_INTERVAL
 
     # Store the hex ID of the new gnome-terminal window.
-    WINDOW_ID=$(wmctrl -l | grep "$TITLE" | cut -f1 -d " ")
+    WINDOW_ID=$(wmctrl -xl | grep "$CLASS" | cut -f1 -d " ")
     echo $WINDOW_ID > $CTRL_FILE
     echo "visible" >> $CTRL_FILE
 
