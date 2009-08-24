@@ -16,7 +16,7 @@ CTRL_FILE="/tmp/f12-id"
 if [ ! -f $CTRL_FILE  ]
 then
     # This is the first invocation.
-    gnome-terminal -e "screen -D -RR"
+    gnome-terminal -e "screen -D -RR" &
 
     # We have to wait for gnome-terminal to start.
     sleep 0.5
