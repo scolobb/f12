@@ -10,6 +10,9 @@
 # This is the expected title of the new terminal window.
 TITLE="New screen..."
 
+# The time to wait for the terminal to start (in seconds).
+WAIT_INTERVAL=0.5
+
 # We will store the hex ID of the gnome-terminal window in this file.
 CTRL_FILE="/tmp/f12-id"
 
@@ -17,9 +20,7 @@ if [ ! -f $CTRL_FILE  ]
 then
     # This is the first invocation.
     gnome-terminal -e "screen -D -RR" &
-
-    # We have to wait for gnome-terminal to start.
-    sleep 0.5
+    sleep $WAIT_INTERVAL
 
     # Store the hex ID of the new gnome-terminal window.
     WINDOW_ID=$(wmctrl -l | grep "$TITLE" | cut -f1 -d " ")
