@@ -25,6 +25,28 @@ WAIT_INTERVAL=0.5
 
 # We will store the hex ID of the terminal window in this file.
 CTRL_FILE="/tmp/f12-id"
+
+# The maximal allowed Z-index for our window.  If the window is found
+# to have a Z-index less than this value while visible, it is brought
+# to front.
+MAX_Z_INDEX=1
+
+# This command will be used to retrieve the list of currently open
+# window sorted by Z-index.
+#
+# WARNING: This is very dependent on the formatting of the output of
+# xwininfo, so please be ready to broken functionality after updates.
+#
+# WARNING: This is very dependent on the window manager you are using.
+# This command works under GNOME/OpenBox 3.4.7.2.
+#
+# EXPLANATION: This command asks xwininfo to list all the children of
+# the root window.  Most visible windows appear indented by 8 spaces.
+# Then comes the hex ID of the window.  Visible windows have the IDs
+# of length 7 or longer.  Then we drop the "(has no name)" windows,
+# which appear under GNOME.
+LIST_WINDOWS_BY_Z="xwininfo -root -tree \
+| grep -E \"^\ \ \ \ \ \ \ \ 0x[0-9a-f]{7,}\" | grep -v \"has no name\""
 #------------------------------------------------------------------------------
 
 if [ ! -f $CTRL_FILE  ]
@@ -38,10 +60,8 @@ then
     echo $WINDOW_ID > $CTRL_FILE
     echo "visible" >> $CTRL_FILE
 
-    # Hide the window from taskbar, make it sticky and keep it above
-    # all others.
+    # Hide the window from taskbar and make it sticky.
     wmctrl -b add,skip_taskbar -i -r $WINDOW_ID
-    wmctrl -b add,above -i -r $WINDOW_ID
     wmctrl -b add,sticky -i -r $WINDOW_ID
 
     exit 0
@@ -60,17 +80,34 @@ then
     exit 0
 fi
 
-# Show/hide the window.
-wmctrl -b toggle,hidden -i -r $WINDOW_ID
-
 # Construct the contents of $CTRL_FILE anew.
 echo $WINDOW_ID > $CTRL_FILE
 
 if [ $WINDOW_STATE = "visible" ]
 then
+    # xwininfo does not bother outputting exactly 8 hex digits, so
+    # drop the 0x and the possible leading zeroes.
+    WINDOW_ID_TRIMMED=$(echo $WINDOW_ID | sed "s/0x0*//i")
+
+    # Get the Z-index of the managed window.
+    Z_INDEX=$(eval $LIST_WINDOWS_BY_Z | grep -n $WINDOW_ID_TRIMMED \
+	| cut -d":" -f1)
+
+    if [ $Z_INDEX -le $MAX_Z_INDEX ]
+    then
+	# The window is visible and currently on top.  Hide it.
+	wmctrl -b add,hidden -i -r $WINDOW_ID
+    else
+	# The window is visible, but not on top.  Bring it to front.
+	wmctrl -i -R $WINDOW_ID
+    fi
+
     WINDOW_STATE="hidden"
 else
     WINDOW_STATE="visible"
+
+    # Show the window.
+    wmctrl -b remove,hidden -i -r $WINDOW_ID
 
     # Bring the terminal window to front.
     wmctrl -i -R $WINDOW_ID
