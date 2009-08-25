@@ -7,6 +7,10 @@
 # of gnome-terminal are launched! Otherwise you might get unexpected
 # behaviour.
 
+#------------------------------------------------------------------------------
+# USER CONFIGURABLE VARIABLES
+# ===========================
+
 # This is the expected title of the new terminal window.
 TITLE="New screen..."
 
@@ -21,6 +25,7 @@ WAIT_INTERVAL=0.5
 
 # We will store the hex ID of the terminal window in this file.
 CTRL_FILE="/tmp/f12-id"
+#------------------------------------------------------------------------------
 
 if [ ! -f $CTRL_FILE  ]
 then
