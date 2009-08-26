@@ -37,8 +37,7 @@ then
     WINDOW_ID=$(wmctrl -xl | grep "$CLASS" | cut -f1 -d " ")
     echo $WINDOW_ID > $CTRL_FILE
 
-    # Hide the window from taskbar and make it sticky.
-    wmctrl -b add,skip_taskbar -i -r $WINDOW_ID
+    # Make the window sticky.
     wmctrl -b add,sticky -i -r $WINDOW_ID
 
     exit 0
@@ -67,9 +66,9 @@ TRIMMED_WINDOW_ID=$(echo $WINDOW_ID | sed "s/0x0*//i")
 if [ "$TRIMMED_ACTIVE_WINDOW_ID" == "$TRIMMED_WINDOW_ID" ]
 then
     # The managed window is the active window.  Hide it.
-    wmctrl -b add,hidden -i -r $WINDOW_ID
+    wmctrl -b add,hidden,skip_taskbar -i -r $WINDOW_ID
 else
     # Make sure the window is visible and bring to front.
-    wmctrl -b remove,hidden -i -r $WINDOW_ID
+    wmctrl -b remove,hidden,skip_taskbar -i -r $WINDOW_ID
     wmctrl -i -R $WINDOW_ID
 fi
