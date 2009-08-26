@@ -36,20 +36,16 @@ then
     # Store the hex ID of the new gnome-terminal window.
     WINDOW_ID=$(wmctrl -xl | grep "$CLASS" | cut -f1 -d " ")
     echo $WINDOW_ID > $CTRL_FILE
-    echo "visible" >> $CTRL_FILE
 
-    # Hide the window from taskbar, make it sticky and keep it above
-    # all others.
+    # Hide the window from taskbar and make it sticky.
     wmctrl -b add,skip_taskbar -i -r $WINDOW_ID
-    wmctrl -b add,above -i -r $WINDOW_ID
     wmctrl -b add,sticky -i -r $WINDOW_ID
 
     exit 0
 fi
 
-# Retrieve the hex ID and the state of the managed window.
-WINDOW_ID=$(head -n1 $CTRL_FILE)
-WINDOW_STATE=$(tail -n1 $CTRL_FILE)
+# Retrieve the hex ID of the managed window.
+WINDOW_ID=$(cat $CTRL_FILE)
 
 if [ ! $(wmctrl -l | cut -d" " -f1 | grep $WINDOW_ID) ]
 then
@@ -60,19 +56,20 @@ then
     exit 0
 fi
 
-# Show/hide the window.
-wmctrl -b toggle,hidden -i -r $WINDOW_ID
+ACTIVE_WINDOW_ID=$(xprop -root | grep "_NET_ACTIVE_WINDOW(WINDOW)"\
+ | cut -d"#" -f2)
 
-# Construct the contents of $CTRL_FILE anew.
-echo $WINDOW_ID > $CTRL_FILE
-
-if [ $WINDOW_STATE = "visible" ]
+# The stored window ID is of the format 0x[0-9a-f]{8}.  xprop does not
+# bother outputting exactly 8 hex digits, so drop the leading 0x0* in
+# both terms.
+TRIMMED_ACTIVE_WINDOW_ID=$(echo $ACTIVE_WINDOW_ID | sed "s/0x0*//i")
+TRIMMED_WINDOW_ID=$(echo $WINDOW_ID | sed "s/0x0*//i")
+if [ "$TRIMMED_ACTIVE_WINDOW_ID" == "$TRIMMED_WINDOW_ID" ]
 then
-    WINDOW_STATE="hidden"
+    # The managed window is the active window.  Hide it.
+    wmctrl -b add,hidden -i -r $WINDOW_ID
 else
-    WINDOW_STATE="visible"
-
-    # Bring the terminal window to front.
+    # Make sure the window is visible and bring to front.
+    wmctrl -b remove,hidden -i -r $WINDOW_ID
     wmctrl -i -R $WINDOW_ID
 fi
-echo $WINDOW_STATE >> $CTRL_FILE
